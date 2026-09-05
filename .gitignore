@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+
+# regenerable stress-test data (run: python data/generate_data.py stress 50000)
+data/*_stress.csv
