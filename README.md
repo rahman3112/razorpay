@@ -44,25 +44,7 @@ when it isn't, is the actual engineering judgment this track asks for.
 
 ## Architecture
 
-```
-Ledger + bank data
-        |
-Reconciliation engine (deterministic, indexed)
-   EXACT -> FEE_TOLERANCE -> TIMING_LAG -> FUZZY_REF
-        |
-Match / exception
-        |
-   [exception] -> Duplicate pre-pass (structural: ref already matched
-                  elsewhere) -> RESOLVE, confidence 1.0, no LLM call
-        |
-   [still exception] -> One-sided pre-pass (structural: no counterpart
-                        anywhere in the other file) -> RESOLVE,
-                        confidence 1.0, no LLM call
-        |
-   [still exception, both sides present] -> LLM classification
-                        (genuine ambiguity) -> confidence score ->
-                        RESOLVE (>= 0.75) or ESCALATE (< 0.75)
-```
+![Architecture: ledger and bank data flow through the deterministic reconciliation engine, then a duplicate pre-pass, then a one-sided pre-pass, with only genuine two-sided mismatches reaching LLM classification](docs/architecture.svg)
 
 ## Results
 
@@ -151,6 +133,24 @@ python3 src/reconcile.py stress --explain  # same, on the stress dataset
 ```
 
 Requires `GEMINI_API_KEY` set in the environment (see `.env.example`).
+
+## Testing
+
+The test suite formalizes the manual ground-truth verification done during
+development - it doesn't test anything new, just pins down what was already
+confirmed by hand as a regression guard.
+
+```bash
+pip install -r requirements.txt pytest
+pytest tests/
+```
+
+| Test file | What it locks in |
+|---|---|
+| `test_duplicate_detection.py` | Duplicate pre-pass catches exactly the `DUPLICATE_LEDGER` transactions in ground truth - 3/3 core, 390/390 stress |
+| `test_fee_tolerance.py` | Tightened `FEE_TOLERANCE` band (1.2-2.8%) excludes `AMOUNT_MISMATCH` transactions - 0/2 core, and the known 45/419 residual overlap on stress (not zero, reported exactly) |
+| `test_throughput.py` | Stress dataset reconciles well within a generous 5s bound - regression guard against the original O(n\*m) bug |
+| `test_determinism.py` | Two runs of `classify_exceptions()` on identical input produce identical category and RESOLVE/ESCALATE decision (requires `GEMINI_API_KEY`; confidence is reported, not asserted exact - see the file's docstring) |
 
 ## Stack
 
