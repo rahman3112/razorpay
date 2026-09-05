@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reconciliation agent — results</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#F7F5F0;
+    --ink:#1C2321;
+    --ink-soft:#5B6360;
+    --line:#D8D4C8;
+    --resolve:#2F6E4F;
+    --escalate:#A85A2E;
+    --flag:#8B2E2E;
+    --flag-bg:#F2E2E0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Inter', sans-serif; padding:48px 24px 80px; line-height:1.55; }
+  .wrap{max-width:920px; margin:0 auto;}
+
+  header{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:40px;}
+  .eyebrow{font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ink-soft); letter-spacing:0.02em;}
+  h1{font-family:'Source Serif 4', serif; font-weight:600; font-size:34px; margin-top:6px; max-width:640px;}
+  .sub{color:var(--ink-soft); margin-top:10px; max-width:600px; font-size:15px;}
+
+  section{margin-bottom:48px;}
+  h2{font-family:'Source Serif 4', serif; font-weight:600; font-size:20px; margin-bottom:6px;}
+  .section-sub{font-size:13px; color:var(--ink-soft); margin-bottom:18px; max-width:560px;}
+
+  .hero-row{display:flex; gap:1px; background:var(--line); border:1px solid var(--line); flex-wrap:wrap;}
+  .hero-stat{background:var(--paper); flex:1 1 220px; padding:24px;}
+  .hero-stat .label{font-size:12px; color:var(--ink-soft);}
+  .hero-stat .value{font-family:'Source Serif 4', serif; font-weight:700; font-size:38px; margin-top:6px;}
+  .hero-stat .delta{font-size:13px; margin-top:6px; color:var(--ink-soft);}
+
+  .barchart{display:flex; flex-direction:column; gap:10px;}
+  .bar-row{display:grid; grid-template-columns:140px 1fr 90px; align-items:center; gap:12px; font-size:14px;}
+  .bar-name{font-weight:500;}
+  .bar-track{background:#EAE7DD; border-radius:4px; height:26px; position:relative; overflow:hidden;}
+  .bar-fill{background:#3F6B52; height:100%; border-radius:4px;}
+  .bar-count{font-family:'IBM Plex Mono', monospace; text-align:right; color:var(--ink-soft);}
+  .bar-note{font-size:12px; color:var(--ink-soft); grid-column:1 / -1; margin-top:-4px; margin-left:152px;}
+
+  .funnel{display:flex; flex-direction:column; gap:0;}
+  .funnel-stage{display:grid; grid-template-columns:36px 1fr 130px; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--line);}
+  .funnel-stage:last-child{border-bottom:none;}
+  .funnel-num{font-family:'Source Serif 4', serif; font-weight:700; font-size:20px; color:var(--ink-soft);}
+  .funnel-body .h{font-weight:600; font-size:15px;}
+  .funnel-body .d{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .funnel-result{text-align:right;}
+  .funnel-result .n{font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:500;}
+  .funnel-result .tag{font-size:11px; margin-top:2px;}
+  .tag-resolve{color:var(--resolve);}
+  .tag-mixed{color:var(--escalate);}
+
+  .llm-split{display:flex; gap:16px; margin-top:14px; padding:14px; background:#EFEBE1; border-radius:6px;}
+  .llm-split .item{flex:1;}
+  .llm-split .n{font-family:'Source Serif 4', serif; font-weight:700; font-size:22px;}
+  .llm-split .l{font-size:12px; color:var(--ink-soft);}
+  .conf-badge{display:inline-block; background:#EAE7DD; padding:2px 8px; border-radius:3px; font-family:'IBM Plex Mono', monospace; font-size:12px; margin-top:8px;}
+
+  .bug-grid{display:flex; flex-direction:column; gap:14px;}
+  .bug{border-left:3px solid var(--ink); padding:16px 20px; background:#EFEBE1; display:grid; grid-template-columns:1fr 160px; gap:16px; align-items:center;}
+  .bug .h{font-weight:600; font-size:15px; margin-bottom:5px;}
+  .bug .b{font-size:13px; color:var(--ink-soft);}
+  .bug .stat-flip{text-align:right;}
+  .bug .stat-flip .before{font-size:13px; color:var(--ink-soft); text-decoration:line-through;}
+  .bug .stat-flip .after{font-family:'IBM Plex Mono', monospace; font-size:20px; font-weight:600; color:var(--resolve);}
+
+  .honest{border-left:3px solid var(--flag); background:var(--flag-bg); padding:16px 20px; font-size:14px;}
+  .honest .h{font-weight:600; color:var(--flag); margin-bottom:5px; font-size:14px;}
+
+  footer{margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+
+  @media (max-width: 600px){
+    .bug{grid-template-columns:1fr;}
+    .bug .stat-flip{text-align:left;}
+    .funnel-stage{grid-template-columns:28px 1fr; }
+    .funnel-result{grid-column:1 / -1; text-align:left; margin-top:6px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">RAZORPAY AI BUILDATHON — TRACK 4, AI FINANCE CONTROLLER</div>
+    <h1>Ledger ↔ bank reconciliation agent</h1>
+    <p class="sub">Matches a merchant's internal ledger against the bank's settlement statement. Most of the work is deterministic rules, not AI — the model only steps in for the handful of cases that genuinely need judgment.</p>
+  </header>
+
+  <section>
+    <div class="hero-row">
+      <div class="hero-stat">
+        <div class="label">Match rate, 5,000 transactions</div>
+        <div class="value">80.0%</div>
+        <div class="delta">honest number — was 87%, which we found was wrong (see below)</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Speed at 50,000 transactions</div>
+        <div class="value">~150k/s</div>
+        <div class="delta">records reconciled per second</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Of the leftover cases needing a closer look</div>
+        <div class="value">61%</div>
+        <div class="delta">resolved with plain rules, no AI call at all</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 1 — four rules explain most transactions</h2>
+    <p class="section-sub">Before any AI is involved, these four plain rules try to explain why a ledger entry and a bank entry are actually the same payment. Bar length = how many transactions each rule explained, out of 5,000.</p>
+    <div class="barchart">
+      <div class="bar-row">
+        <div class="bar-name">Exact match</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;"></div></div>
+        <div class="bar-count">1,941</div>
+      </div>
+      <div class="bar-note">Same reference, amount, and date on both sides</div>
+
+      <div class="bar-row">
+        <div class="bar-name">Fee deducted</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40%;"></div></div>
+        <div class="bar-count">780</div>
+      </div>
+      <div class="bar-note">Bank paid 1.2–2.8% less than the ledger — a normal processing fee</div>
+
+      <div class="bar-row">
+        <div class="bar-name">Paid late</div>
+        <div class="bar-track"><div class="bar-fill" style="width:39%;"></div></div>
+        <div class="bar-count">749</div>
+      </div>
+      <div class="bar-note">Bank settled up to 3 days after the ledger date</div>
+
+      <div class="bar-row">
+        <div class="bar-name">Typo'd reference</div>
+        <div class="bar-track"><div class="bar-fill" style="width:19%;"></div></div>
+        <div class="bar-count">375</div>
+      </div>
+      <div class="bar-note">Same transaction ID, formatted differently on each side</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 2 — what's left gets resolved in three stages, cheapest first</h2>
+    <p class="section-sub">1,919 transactions didn't fit any of the four rules above. Here's how the system works through them — plain logic first, AI only where it's genuinely needed.</p>
+
+    <div class="funnel">
+      <div class="funnel-stage">
+        <div class="funnel-num">1</div>
+        <div class="funnel-body">
+          <div class="h">Already explained elsewhere — duplicate booking</div>
+          <div class="d">This entry's reference already matched successfully somewhere else. No AI needed — that's just a fact.</div>
+        </div>
+        <div class="funnel-result">
+          <div class="n">390</div>
+          <div class="tag tag-resolve">all resolved</div>
+        </div>
+      </div>
+
+      <div class="funnel-stage">
+        <div class="funnel-num">2</div>
+        <div class="funnel-body">
+          <div class="h">Missing from one side entirely</div>
+          <div class="d">Exists on the ledger with nothing on the bank side, or vice versa. Again, no judgment call — it's structurally one-sided.</div>
+        </div>
+        <div class="funnel-result">
+          <div class="n">781</div>
+          <div class="tag tag-resolve">all resolved</div>
+        </div>
+      </div>
+
+      <div class="funnel-stage">
+        <div class="funnel-num">3</div>
+        <div class="funnel-body">
+          <div class="h">Present on both sides, still doesn't match — genuinely ambiguous</div>
+          <div class="d">A real ledger entry and a real bank entry for the same reference, but the amounts don't reconcile under any rule above. This is the one case that actually needs judgment.</div>
+        </div>
+        <div class="funnel-result">
+          <div class="n">748</div>
+          <div class="tag tag-mixed">sent to the AI</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="llm-split">
+      <div class="item">
+        <div class="n">268</div>
+        <div class="l">AI approved (confident it's fine)</div>
+      </div>
+      <div class="item">
+        <div class="n">480</div>
+        <div class="l">AI flagged for a human to check</div>
+      </div>
+      <div class="item">
+        <div class="n">19</div>
+        <div class="l">actual AI calls made (batched, not one-by-one)</div>
+      </div>
+    </div>
+    <div class="conf-badge">Confidence genuinely ranged 0.20–0.91 across cases — it isn't rubber-stamping everything</div>
+  </section>
+
+  <section>
+    <h2>Real bugs we found and fixed today</h2>
+    <div class="bug-grid">
+      <div class="bug">
+        <div>
+          <div class="h">Got slow at real volume</div>
+          <div class="b">The matching logic compared every record against every other record — fine at 60 transactions, far too slow past 5,000. Rewrote it to look records up directly instead.</div>
+        </div>
+        <div class="stat-flip">
+          <div class="before">2,616 records/sec</div>
+          <div class="after">252,000+ /sec</div>
+        </div>
+      </div>
+
+      <div class="bug">
+        <div>
+          <div class="h">The AI wasn't really detecting duplicates</div>
+          <div class="b">It was quietly reading a leftover marker in our own test data, not genuine signal. We removed the marker, watched detection disappear, and replaced it with a plain rule instead.</div>
+        </div>
+        <div class="stat-flip">
+          <div class="before">looked accurate</div>
+          <div class="after">100% verified</div>
+        </div>
+      </div>
+
+      <div class="bug">
+        <div>
+          <div class="h">A too-generous rule was hiding real problems</div>
+          <div class="b">Our "this is just a fee" rule was wide enough to also wave through genuine payment discrepancies as if they were fine. Tightened it to match what a real fee actually looks like.</div>
+        </div>
+        <div class="stat-flip">
+          <div class="before">91% wrongly waved through</div>
+          <div class="after">11% (known, explained)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="honest">
+      <div class="h">Why our headline number is lower than it used to be</div>
+      Earlier today this showed 87%. That number was wrong — it was counting some real payment problems as clean matches. 80% is the honest number, double-checked against a known-correct answer key. We'd rather show you a correct number that's lower than a wrong one that looks better.
+    </div>
+  </section>
+
+  <footer>
+    reconcile.py · generate_data.py · validated against ground_truth.csv and ground_truth_stress.csv
+  </footer>
+
+</div>
+</body>
+</html>
